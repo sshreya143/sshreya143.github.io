@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>The Date Who Wasn't Real — Y2K Edition</title>
+<style>
+  :root{
+    --bg:#ffeff7;
+    --hot:#ff007f;
+    --light:#ffd3ec;
+    --muted:#ff7ec6;
+    --card:#fff;
+    --accent:#ff6aa6;
+    --y2k-blue:#ccf9ff;
+    --y2k-purple:#e2c6ff;
+    --neon-green:#39ff14;
+  }
+  html,body{height:100%;margin:0;font-family:'Comic Sans MS', cursive, sans-serif;background:var(--bg); color:#333;}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden; background: radial-gradient(circle, #ffeff7 0%, #ffd3ec 100%);}
+  
+  #game{
+    width:960px;height:540px;background:var(--card);border-radius:20px;
+    box-shadow:0 0 0 10px var(--light), 0 20px 50px rgba(255, 0, 127, 0.2);
+    border:5px dashed var(--hot);box-sizing:border-box;padding:18px;position:relative;overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  
+  #header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:10px; border-bottom: 3px double var(--hot); position:relative; z-index:60;}
+  #titleMini{font-weight:900;color:var(--hot);font-size:22px; text-shadow: 2px 2px var(--y2k-blue);}
+  #scoreBox{background:var(--hot); color:white;padding:6px 14px;border-radius:20px;font-weight:800; border: 2px solid white; box-shadow: 3px 3px 0px var(--y2k-blue);}
+  
+  #titleScreen {
+    position:absolute;inset:0;
+    background:rgba(255, 239, 250, 0.85); 
+    backdrop-filter: blur(4px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:110;
+  }
+
+  #guidebook, #profileSetup{
+    position:absolute;inset:0;background:rgba(255, 239, 250, 0.98);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;
+  }
+
+  #titleScreen h1 { 
+    font-size:60px; margin:0; color:var(--hot); font-weight: bold; 
+    text-shadow: 4px 4px var(--y2k-blue), -2px -2px var(--y2k-purple);
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  
+  #guidebook { display: none; z-index: 120; }
+  .book-container {
+    background: #fff; width: 500px; height: 380px; border-radius: 15px;
+    border: 4px solid var(--hot); box-shadow: 15px 15px 0px var(--muted);
+    padding: 30px; display: flex; flex-direction: column; align-items: center;
+    background-image: linear-gradient(#e5e5e5 1px, transparent 1px);
+    background-size: 100% 2.5rem;
+    position: relative;
+  }
+  .sticker { position: absolute; font-size: 40px; pointer-events: none; }
+  
+  .sticker-img { position: absolute; width: 65px; height: auto; pointer-events: none; z-index: 5; animation: wobble 3s ease-in-out infinite; }
+  .ribbon-sticker { bottom: 85px; left: 20px; }
+  .lip-sticker { bottom: 85px; right: 20px; animation-delay: 0.5s; }
+
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-5deg) scale(1); }
+    50% { transform: rotate(5deg) scale(1.1); }
+  }
+
+  .page-content { font-size: 18px; line-height: 2.2; color: #444; flex: 1; padding-top: 10px; font-weight: bold; text-align: center;}
+
+  #profileSetup { z-index: 90; display: none; padding: 10px; overflow-y: auto; text-align: center; }
+  
+  #cameraWrap { 
+    width: 280px; height: 280px; 
+    border-radius: 50%; 
+    border: 8px solid var(--hot); 
+    overflow: hidden; 
+    position: relative; 
+    background: #eee; 
+    margin: 10px auto; 
+    box-shadow: 0 0 20px var(--muted);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #video, #capturedImage { width: 100%; height: 100%; object-fit: cover; }
+  
+  .inputGroup { margin-bottom: 8px; text-align: left; width: 280px; margin-left: auto; margin-right: auto;}
+  .inputField, .selectField { padding: 6px; border-radius: 12px; border: 3px solid var(--y2k-blue); width: 100%; font-family: inherit; font-size: 13px;}
+  label { font-size: 12px; font-weight: bold; color: var(--hot); margin-left: 5px; }
+
+  #chatWrap{flex:1;display:flex;flex-direction:column;gap:12px;overflow:hidden; position: relative;}
+  #chat{flex:1;overflow-y:scroll;padding:10px;display:flex;flex-direction:column;gap:10px; scroll-behavior: smooth; cursor: pointer;}
+  .bubble{max-width:72%;padding:12px 14px;border-radius:20px; font-size:15px; box-shadow: 4px 4px 0px var(--light); position:relative; word-wrap: break-word;}
+  .npc{align-self:flex-start;background:var(--hot);color:white;border-bottom-left-radius:0;}
+  .player{align-self:flex-end;background:var(--y2k-blue);color:#1b1b1b;border:2px solid var(--hot);border-bottom-right-radius:0;}
+  
+  #continuePrompt {
+    position: absolute; bottom: 15px; right: 15px; background: white; border: 2px solid var(--hot);
+    padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: bold; color: var(--hot);
+    animation: blink 1s infinite; display: none; pointer-events: none; z-index: 70;
+  }
+
+  #meetupWrap {
+    position: absolute; inset: 0; background: #fff; z-index: 150; 
+    display: none; flex-direction: column; align-items: center;
+  }
+  #meetupImg { width: 100%; height: 400px; object-fit: contain; background: #ffe; border-bottom: 5px solid var(--hot); }
+  #dialogueBox {
+    flex: 0 0 100px; width: 100%; background: var(--bg); padding: 20px; box-sizing: border-box;
+    border-top: 5px dashed var(--hot); cursor: pointer; position: relative;
+    font-size: 18px; line-height: 1.2; font-weight: bold; color: #333;
+  }
+  #dialogueBox::after { content: "▼"; position: absolute; bottom: 10px; right: 20px; color: var(--hot); animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .choiceBtn{
+    background:var(--hot);color:white;padding:10px;border-radius:15px;border:3px solid white;
+    font-weight:900;cursor:pointer;font-family: inherit; box-shadow: 4px 4px 0px var(--y2k-blue);
+    transition: 0.2s;
+  }
+  .choiceBtn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--y2k-purple); }
+
+  .flashyBtn {
+    background: #00ffcc !important;
+    color: #000 !important;
+    border: 4px solid #fff !important;
+    text-transform: uppercase;
+    font-size: 16px !important;
+    animation: neonPulse 0.8s infinite alternate;
+  }
+  @keyframes neonPulse {
+    from { box-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc; transform: scale(1); }
+    to { box-shadow: 0 0 20px #00ffcc, 0 0 40px #ff007f; transform: scale(1.05); }
+  }
+
+  #quizModal{
+    position:absolute;inset:20px;background:white;z-index:200;border-radius:20px;
+    padding:18px;display:none;flex-direction:column;align-items:center;border: 6px solid var(--hot);
+  }
+  .quizImg { width: 100%; max-width: 500px; height: 260px; object-fit: contain; border-radius: 15px; border: 4px solid var(--y2k-blue); margin-bottom: 10px; background: #fff; }
+  
+  .correct { background: #d4edda !important; color: #155724 !important; }
+  .wrong { background: #f8d7da !important; color: #721c24 !important; }
+  .heart { position: absolute; top: -20px; font-size: 24px; animation: fall linear forwards; z-index: 250; pointer-events: none; }
+  @keyframes fall { to { transform: translateY(560px) rotate(360deg); opacity: 0; } }
+
+  #chatCameraOverlay {
+    position: absolute; inset: 0; background: rgba(255,255,255,0.9);
+    display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200;
+  }
+
+  #certOverlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center; z-index: 300;
+  }
+  #certificate {
+    width: 600px; padding: 40px; background: #fff; border: 15px double var(--hot);
+    text-align: center; box-shadow: 0 0 50px rgba(255,0,127,0.5); position: relative;
+  }
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="header">
+    <div id="titleMini">★ CYBER-DATE 2000 ★</div>
+    <div id="scoreBox">Points: <span id="scoreVal">0</span></div>
+  </div>
+
+  <div id="titleScreen">
+    <div class="sticker" style="top:20px; left:50px;">💖</div>
+    <div class="sticker" style="bottom:50px; right:80px;">🦋</div>
+    <h1>The Date Who Wasn't Real</h1>
+    <button class="choiceBtn" style="margin-top:20px;">Open My Diary (Guide) 📖</button>
+  </div>
+
+  <div id="guidebook">
+    <div class="book-container">
+        <h2 style="color:var(--hot); margin:0;">Personal Guidebook</h2>
+        <div id="guidePageNum" style="font-size: 12px; color: var(--muted); margin-bottom: 5px; font-weight: bold;">Page 1/4</div>
+        <div id="guideContent" class="page-content"></div>
+        <img src="whiteribbon.png" alt="" class="sticker-img ribbon-sticker">
+        <img src="pinklip.png" alt="" class="sticker-img lip-sticker">
+        <button id="nextPage" class="choiceBtn" style="width: 100%; z-index: 10;">FLIP PAGE ▷</button>
+    </div>
+  </div>
+
+  <div id="profileSetup">
+    <h3 style="color:var(--hot); margin: 5px;">★ YOUR PROFILE ★</h3>
+    <div id="cameraWrap"><video id="video" autoplay playsinline></video><img id="capturedImage" style="display:none;"></div>
+    <div style="margin-bottom:10px; display:flex; justify-content:center; gap:10px;">
+        <button id="snap" class="choiceBtn" style="font-size:12px;">📸 Snap!</button>
+        <button id="retake" class="choiceBtn" style="background:gray; font-size:12px; display:none;">Undo</button>
+    </div>
+    <div class="inputGroup"><label>My Name</label><input type="text" id="userName" class="inputField" placeholder="Name..."></div>
+    <div class="inputGroup">
+        <label>I am looking for...</label>
+        <select id="userLookingFor" class="selectField">
+            <option value="serious">Serious & Long-term</option>
+            <option value="casual">Casual & Fun</option>
+            <option value="deep">A Deep Connection</option>
+        </select>
+    </div>
+    <div class="inputGroup"><label>My Vibe</label><select id="userTrait" class="selectField"><option value="adventurous">Adventurous</option><option value="chill">Chill</option></select></div>
+    <button id="startChat" class="choiceBtn" style="width:280px; font-size:16px;">ENTER CHAT ✨</button>
+  </div>
+
+  <div id="chatWrap">
+    <div id="chat"></div>
+    <div id="typing" style="display:none; padding:10px; font-size: 12px; color: var(--hot);">Jay is typing...</div>
+    <div id="continuePrompt">Click to continue...</div>
+    
+    <div id="chatCameraOverlay">
+      <div id="cameraWrapChat" style="width:280px; height:280px; border-radius:50%; border:8px solid var(--hot); overflow:hidden; margin-bottom:10px;">
+        <video id="videoChat" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+      </div>
+      <button id="snapChat" class="choiceBtn">📸 SEND SELFIE</button>
+    </div>
+  </div>
+  
+  <div id="choices" style="display:none; padding:10px; flex-direction:column; gap:8px;"></div>
+
+  <div id="meetupWrap">
+    <img id="meetupImg" src="catfishfirstview.jpg">
+    <div id="dialogueBox">Click to start the date...</div>
+    <div id="meetupChoices" style="display:none; padding:15px; flex-direction:column; gap:8px; width:100%; background:white; position:absolute; bottom:0; z-index:160;"></div>
+  </div>
+
+  <div id="quizModal">
+    <h3 style="color:var(--hot); margin:0 0 10px 0;">★ SAFETY TEST ★</h3>
+    <div id="quizContent" class="qBlock"></div>
+    <div style="margin-top:10px; display:flex; gap:10px;">
+      <button id="nextQuizBtn" class="choiceBtn" style="display:none; background:var(--accent);">Next ▷</button>
+      <button id="finishGame" class="choiceBtn" style="display:none; background:var(--accent);">Finish ✨</button>
+    </div>
+  </div>
+
+  <div id="certOverlay">
+    <div id="certificate">
+      <h1 style="color:var(--hot); margin:0; font-size:40px;">CERTIFICATE</h1>
+      <p style="font-size:20px;">of Online Safety</p>
+      <div style="margin:30px 0;">
+        <p>This award is proudly presented to:</p>
+        <h2 id="certName" style="font-size:35px; border-bottom:3px solid var(--hot); display:inline-block; min-width:200px;"></h2>
+      </div>
+      <p>For achieving a safety score of: <b id="certScore" style="color:var(--hot);"></b></p>
+      <p style="margin-top:40px; font-style:italic;">"Official CyberDate 2000 Graduate"</p>
+      <button class="choiceBtn" onclick="location.reload()">PLAY AGAIN 🦋</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="photoCanvas" width="320" height="320" style="display:none;"></canvas>
+<audio id="bgm" src="bgmcoding.mp3" loop></audio>
+
+<script>
+const chat = document.getElementById('chat'), typing = document.getElementById('typing'), choices = document.getElementById('choices'),
+      titleScreen = document.getElementById('titleScreen'), guidebook = document.getElementById('guidebook'),
+      guideContent = document.getElementById('guideContent'), nextPage = document.getElementById('nextPage'),
+      guidePageNum = document.getElementById('guidePageNum'),
+      profileSetup = document.getElementById('profileSetup'), scoreVal = document.getElementById('scoreVal'),
+      quizModal = document.getElementById('quizModal'), quizContent = document.getElementById('quizContent'),
+      nextQuizBtn = document.getElementById('nextQuizBtn'), finishBtn = document.getElementById('finishGame'),
+      video = document.getElementById('video'), videoChat = document.getElementById('videoChat'), 
+      canvas = document.getElementById('photoCanvas'), 
+      snapBtn = document.getElementById('snap'), retakeBtn = document.getElementById('retake'),
+      snapChatBtn = document.getElementById('snapChat'), chatCameraOverlay = document.getElementById('chatCameraOverlay'),
+      capturedImg = document.getElementById('capturedImage'), startBtn = document.getElementById('startChat'),
+      bgm = document.getElementById('bgm'), meetupWrap = document.getElementById('meetupWrap'),
+      meetupImg = document.getElementById('meetupImg'), dialogueBox = document.getElementById('dialogueBox'),
+      meetupChoices = document.getElementById('meetupChoices'),
+      continuePrompt = document.getElementById('continuePrompt');
+
+let score = 0, step = 0, waiting = false, playerName = "You", audioCtx, currentStream;
+let quizIdx = 0, guideIdx = 0, videoSent = false, meetupStep = 0, isFlashForward = false;
+
+const guidePages = ["Welcome to CyberDate! CyberDate is an interactive dating app experience where your choices matter. You’ll step into the role of a dating app user chatting with a new match", "Be careful,some matches on dating apps may be using AI to deceive you.", "Ensure that your match is a real and authentic person!", "Ready? Let's go!"];
+
+const quizData = [
+  {q: "Matched with someone too-perfect. What to ask for?", opts: ["Instagram", "10s live video", "Address"], a: 1, img: "couplesmeme.jpg"},
+  {q: "A stranger asks for private photos. You should:", opts: ["Send it", "Refuse and report", "Ask for one back"], a: 1, img: "nerd.jpg"},
+  {q: "Pic reverse-matches to stock AI images. This means:", opts: ["They are fake", "They are famous", "They are verified"], a: 0, img: "AI.jpg"},
+  {q: "If someone pressures you at a meetup:", opts: ["Stay", "Call a friend / leave", "Confront alone"], a: 1, img: "helppp.webp"},
+  {q: "A voice note sounds like a friend asking for $$$:", opts: ["Send money", "Call to verify", "Ignore"], a: 1, img: "money.jpg"},
+  {q: "Best way to save evidence of a catfish:", opts: ["Screenshots", "Delete chat", "Block immediately"], a: 0, img: "catfish.jpg"}
+];
+
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+function playSound(f, t, d, v) { if (!audioCtx) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(v, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); }
+const sfx = { msg: () => playSound(800, 'sine', 0.1, 0.1), click: () => playSound(400, 'triangle', 0.05, 0.1), success: () => playSound(600, 'sine', 0.1, 0.1), shutter: () => playSound(1000, 'square', 0.05, 0.2) };
+
+titleScreen.onclick = () => { initAudio(); bgm.play(); titleScreen.style.display = 'none'; guidebook.style.display = 'flex'; showGuidePage(); sfx.click(); };
+function showGuidePage() { guideContent.innerHTML = guidePages[guideIdx]; guidePageNum.innerText = `Page ${guideIdx + 1}/${guidePages.length}`; if (guideIdx === guidePages.length - 1) nextPage.innerText = "CREATE PROFILE ✨"; }
+nextPage.onclick = () => { sfx.click(); if (guideIdx < guidePages.length - 1) { guideIdx++; showGuidePage(); } else { guidebook.style.display = 'none'; profileSetup.style.display = 'flex'; startCamera(video); } };
+
+async function startCamera(targetVideo) { 
+  try { 
+    if(currentStream) currentStream.getTracks().forEach(track => track.stop());
+    currentStream = await navigator.mediaDevices.getUserMedia({ video: true }); 
+    targetVideo.srcObject = currentStream; 
+  } catch (err) { console.log(err); } 
+}
+
+snapBtn.onclick = () => { 
+  canvas.getContext('2d').drawImage(video, 0, 0, 320, 320); 
+  capturedImg.src = canvas.toDataURL('image/png'); 
+  capturedImg.style.display = 'block'; video.style.display = 'none'; 
+  snapBtn.style.display = 'none'; retakeBtn.style.display = 'inline-block'; 
+  sfx.shutter(); 
+};
+
+startBtn.onclick = () => { 
+  playerName = document.getElementById('userName').value || "Cutie"; 
+  profileSetup.style.display = 'none'; bgm.pause(); sfx.success(); 
+  if(currentStream) currentStream.getTracks().forEach(track => track.stop());
+  step = 1; run(); 
+};
+
+function showBubble(kind, text, opts={}){
+  if(kind === 'npc') typing.style.display = 'block';
+  setTimeout(()=>{ 
+    typing.style.display='none'; 
+    const b = document.createElement('div'); b.className = 'bubble ' + kind; 
+    b.innerText = (kind === 'player' ? playerName + ": " : "") + text; 
+    chat.appendChild(b); chat.scrollTop = chat.scrollHeight; sfx.msg(); 
+    if(opts.callback) opts.callback(); else { waiting = true; continuePrompt.style.display = 'block'; }
+  }, opts.delay ?? 700);
+}
+
+function showVideo(src, delay=1200){ setTimeout(()=>{ const b = document.createElement('div'); b.className = 'bubble npc'; const vid = document.createElement('video'); vid.src = src; vid.controls = true; vid.style.width = "100%"; vid.style.borderRadius = "10px"; b.appendChild(vid); chat.appendChild(b); chat.scrollTop = chat.scrollHeight; sfx.msg(); waiting=true; continuePrompt.style.display='block';}, delay); }
+function showImage(src, delay=1200, kind='npc'){ setTimeout(()=>{ const b = document.createElement('div'); b.className = 'bubble ' + kind; const img = document.createElement('img'); img.src = src; img.style.width="100%"; img.style.borderRadius="10px"; b.appendChild(img); chat.appendChild(b); chat.scrollTop = chat.scrollHeight; sfx.msg();}, delay); }
+
+chat.addEventListener('click', ()=>{ if(waiting) { waiting = false; continuePrompt.style.display = 'none'; step++; run(); } });
+
+function run(){
+  if(step===1) showBubble('npc', `Profile active! You look fab, ${playerName}!`);
+  else if(step===2) showBubble('npc', `Matching based on your vibe...`);
+  else if(step===3) {
+    showBubble('npc', "Jay✨: Hey! I think we have the same vibe! lol", {delay:400, callback: () => {
+        showImage("fakedate.png", 500);
+        setTimeout(()=>{
+          showChoices([
+            {text: "Hey! Love that vibe.", onClick: ()=>playerReply1()},
+            {text: "Check for glitches", onClick: ()=>{ score+=1; stalkProfile(); }}
+          ]);
+        }, 1200);
+    }});
+  }
+}
+
+function showChoices(list){
+  continuePrompt.style.display = 'none'; choices.innerHTML = ''; choices.style.display = 'flex';
+  list.forEach(item=>{
+    const btn = document.createElement('button'); 
+    btn.className = 'choiceBtn' + (item.flashy ? ' flashyBtn' : '');
+    btn.innerText = item.text;
+    btn.onclick = ()=>{ sfx.click(); choices.style.display='none'; item.onClick(); };
+    choices.appendChild(btn);
+  });
+}
+
+function playerReply1(){ 
+  showBubble('player', "Hey! Love that vibe.", {callback: () => {
+      showBubble('npc', `Jay: Send me a selfie?`, {delay: 1000, callback: () => {
+          showChoices([
+             {text: "Send a selfie", onClick: () => openChatCamera()},
+             {text: "Ask for live video verification", flashy: true, onClick: () => askForVideo()} 
+          ]);
+      }});
+  }}); 
+}
+
+function openChatCamera() {
+  chatCameraOverlay.style.display = 'flex';
+  startCamera(videoChat);
+  snapChatBtn.onclick = () => {
+    sfx.shutter();
+    canvas.getContext('2d').drawImage(videoChat, 0, 0, 320, 320);
+    const data = canvas.toDataURL('image/png');
+    chatCameraOverlay.style.display = 'none';
+    if(currentStream) currentStream.getTracks().forEach(track => track.stop());
+    showImage(data, 100, 'player');
+    setTimeout(() => {
+      score -= 1; 
+      // Changed to pass "true" for showing the meetup disaster even if they failed early
+      blocked("Dangerous to send photos to strangers!", true);
+    }, 1500);
+  };
+}
+
+function stalkProfile(){ 
+  showBubble('player', "Searching for glitches...", {callback: () => {
+      showBubble('npc', "Wait... his background is warping!", {delay: 1000, callback: () => {
+          showChoices([{text: "Ask for live video", flashy: true, onClick: () => askForVideo()}]);
+      }});
+  }});
+}
+
+function askForVideo() {
+    showBubble('player', "Can you send a 10s live video verification?", {callback: () => {
+        showBubble('npc', "Jay: Sure, babe! Check this out:", {delay: 1000, callback: () => {
+            showVideo("livevideoAI.mp4", 500);
+            setTimeout(() => {
+                showChoices([
+                    {text: "Keep chatting online", onClick: () => keepChatting()},
+                    {text: "Ask to meet up in person", flashy: true, onClick: () => startMeetup()},
+                    {text: "That looks like a deepfake! BLOCK", onClick: () => { score += 3; blocked("Great eye!", true); }}
+                ]);
+            }, 3500);
+        }});
+    }});
+}
+
+function keepChatting() {
+    showBubble('player', "You look great, let's keep talking here for a while.");
+    setTimeout(() => {
+        showBubble('npc', "Jay: I'd rather see you in person... but okay.");
+        setTimeout(() => { 
+            // Trigger Flash Forward from a safe choice
+            showFlashForward("You chose to stay safe online! But here is what would have happened if you met up...");
+        }, 2000);
+    }, 1000);
+}
+
+function showFlashForward(introMsg) {
+  showBubble('npc', introMsg);
+  setTimeout(() => {
+    isFlashForward = true;
+    startMeetup();
+  }, 2000);
+}
+
+function startMeetup() { chatWrap.style.display = 'none'; meetupWrap.style.display = 'flex'; advanceMeetup(); }
+
+function advanceMeetup() {
+    sfx.click();
+    let prefix = isFlashForward ? "FLASH FORWARD: " : "";
+    if (meetupStep === 0) { dialogueBox.innerText = prefix + "You arrive at the cafe. You see a man. He looks... different."; meetupStep++; }
+    else if (meetupStep === 1) { meetupImg.src = "catfishfirstview.jpg"; dialogueBox.innerText = "Jay: Oh hey! You're finally here!"; meetupStep++; }
+    else if (meetupStep === 2) { showMeetupChoices([{text: "You don't look like your photos?", onClick: () => { meetupImg.src = "catfish22.jpg"; dialogueBox.innerText = "Jay: Lighting. Don't be weird."; meetupStep = 4; }}]); }
+    else if (meetupStep === 4) { dialogueBox.innerText = "Jay: Anyway... we have such a deep connection..."; meetupStep++; }
+    else if (meetupStep === 5) { meetupImg.src = "proposal.jpg"; dialogueBox.innerText = "Jay: Will you marry me?"; meetupStep++; }
+    else if (meetupStep === 6) { showMeetupChoices([{text: "NO. You're a catfish!", onClick: () => { score += 5; meetupImg.src = "angryman.jpg"; dialogueBox.innerText = "Jay: HOW DARE YOU!"; meetupStep = 8; }}]); }
+    else if (meetupStep === 8) { dialogueBox.innerText = "He starts making a scene. You need to leave."; meetupStep++; }
+    else if (meetupStep === 9) { 
+        meetupWrap.style.display = 'none'; 
+        let endReason = isFlashForward ? "You saw the truth!" : "You escaped the catfish!";
+        blocked(endReason, false); 
+    }
+}
+dialogueBox.onclick = () => { if (meetupChoices.style.display === 'none') advanceMeetup(); };
+function showMeetupChoices(list) { meetupChoices.innerHTML = ''; meetupChoices.style.display = 'flex'; list.forEach(item => { const btn = document.createElement('button'); btn.className = 'choiceBtn'; btn.innerText = item.text; btn.onclick = (e) => { e.stopPropagation(); sfx.click(); meetupChoices.style.display = 'none'; item.onClick(); }; meetupChoices.appendChild(btn); }); }
+
+function blocked(reason, showMeetupFirst = false){ 
+    if (showMeetupFirst) {
+        showFlashForward(`BANNED! ${reason} Let's see what you avoided...`);
+    } else {
+        chatWrap.style.display = 'flex'; // Ensure chat is visible for the message
+        showBubble('npc', `${reason} Opening the safety exam...`); 
+        setTimeout(()=> { quizIdx = 0; openQuiz(); }, 3000); 
+    }
+}
+
+function openQuiz(){ bgm.play(); quizModal.style.display='flex'; renderQuestion(); }
+
+function renderQuestion() { 
+  const current = quizData[quizIdx]; 
+  nextQuizBtn.style.display = 'none';
+  finishBtn.style.display = 'none';
+  quizContent.innerHTML = `<img src="${current.img}" class="quizImg"><p><b>${quizIdx+1}. ${current.q}</b></p><div id="quizOpts"></div>`; 
+  current.opts.forEach((o, j) => { 
+    const btn = document.createElement('button'); 
+    btn.className = 'choiceBtn'; 
+    btn.style.margin = "4px"; 
+    btn.style.background = "white"; 
+    btn.style.color = "var(--hot)"; 
+    btn.innerText = o; 
+    btn.onclick = () => { 
+      const all = quizContent.querySelectorAll('button'); all.forEach(b => b.disabled = true);
+      if (j === current.a) { btn.classList.add('correct'); score++; sfx.success(); } else { btn.classList.add('wrong'); all[current.a].classList.add('correct'); }
+      scoreVal.innerText = score;
+      if (quizIdx < quizData.length - 1) {
+          nextQuizBtn.style.display = 'inline-block';
+      } else {
+          finishBtn.style.display = 'inline-block';
+      }
+    }; 
+    quizContent.querySelector('#quizOpts').appendChild(btn); 
+  }); 
+}
+
+nextQuizBtn.onclick = () => { quizIdx++; nextQuizBtn.style.display = 'none'; renderQuestion(); };
+
+finishBtn.onclick = ()=>{ 
+    bgm.pause(); 
+    quizModal.style.display='none'; 
+    chat.innerHTML = ''; 
+    setInterval(() => { 
+        const heart = document.createElement('div'); 
+        heart.className = 'heart'; 
+        heart.innerHTML = '💖'; 
+        heart.style.left = Math.random() * 100 + '%'; 
+        heart.style.animationDuration = '3s'; 
+        document.getElementById('game').appendChild(heart); 
+    }, 300); 
+    showBubble('npc', `YAY! Game Over! Final Score: ${score}. You're a total Safety Queen! ✨`, {callback: () => {
+      setTimeout(() => {
+        document.getElementById('certName').innerText = playerName;
+        document.getElementById('certScore').innerText = score;
+        document.getElementById('certOverlay').style.display = 'flex';
+      }, 2000);
+    }}); 
+};
+</script>
+</body>
+</html>
